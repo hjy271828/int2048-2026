@@ -22,21 +22,9 @@ class int2048 {
     std::vector<int> int_data;
     bool is_negative = 0;
 
-    void int_reduction() {
-        int length = int_data.size();
-        if (!length) {
-            is_negative = 0;
-            return;
-        }
-        for (int cur_idx = length - 1; cur_idx >= 0; --cur_idx) {
-            if (int_data[cur_idx]) {
-                int_data.resize(cur_idx + 1);
-                return;
-            }
-        }
-        is_negative = 0;
-        int_data.clear();
-    }
+    void int_reduction();
+
+    bool compare_abs(const int2048&, const int2048&);
 
    public:
     // 构造函数

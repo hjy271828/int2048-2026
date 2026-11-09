@@ -8,16 +8,18 @@ namespace sjtu {
 int2048::int2048() {}
 
 int2048::int2048(long long input_int) {
+    int_data.clear();
     if (input_int < 0) {
         is_negative = 1;
+        input_int = -input_int;
     } else {
         is_negative = 0;
     }
     int cur_idx = 0;
+
     while (input_int) {
-        int_data[cur_idx] = input_int % 10;
+        int_data.push_back(input_int % 10);
         input_int /= 10;
-        cur_idx++;
     }
 }
 
@@ -37,6 +39,22 @@ int2048::int2048(const std::string& input_int) {
         int_data[cur_idx] = int(input_int[length - 1 - cur_idx] - '0');
     }
     int_reduction();
+}
+
+void int2048::int_reduction() {
+    int length = int_data.size();
+    if (!length) {
+        is_negative = 0;
+        return;
+    }
+    for (int cur_idx = length - 1; cur_idx >= 0; --cur_idx) {
+        if (int_data[cur_idx]) {
+            int_data.resize(cur_idx + 1);
+            return;
+        }
+    }
+    is_negative = 0;
+    int_data.clear();
 }
 
 int2048::int2048(const int2048& another) {
@@ -128,6 +146,95 @@ int2048& int2048::add(const int2048& another) {
         minus(opposite_num(another));
         return *this;
     }
+}
+
+bool int2048::compare_abs(const int2048& int1, const int2048& int2) {
+    int int1_len = int1.int_data.size();
+    int int2_len = int2.int_data.size();
+    if (int1_len != int2_len) {
+        return (int1_len > int2_len);
+    }
+    for (int cur_idx = int1_len - 1; cur_idx >= 0; --cur_idx) {
+        if (int1.int_data[cur_idx] != int2.int_data[cur_idx]) {
+            return (int1.int_data[cur_idx] > int2.int_data[cur_idx]);
+        }
+    }
+    return 1;
+}
+
+int2048& int2048::minus(const int2048& another) {
+    int int1_len = int_data.size();
+    int int2_len = another.int_data.size();
+    if (is_negative != another.is_negative) {
+        add(opposite_num(another));
+        return *this;
+    } else {
+        if (compare_abs(*this, another)) {
+            bool borrow = 0;
+            for (int cur_idx = 0; cur_idx < int1_len; ++cur_idx) {
+                if (cur_idx < int2_len) {
+                    int minus_calculated =
+                        int_data[cur_idx] - another.int_data[cur_idx] - borrow;
+                    if (minus_calculated < 0) {
+                        int_data[cur_idx] = 10 + minus_calculated;
+                        borrow = 1;
+                    } else {
+                        int_data[cur_idx] = minus_calculated;
+                        borrow = 0;
+                    }
+                } else {
+                    int minus_calculated = int_data[cur_idx] - borrow;
+                    if (minus_calculated < 0) {
+                        int_data[cur_idx] = 10 + minus_calculated;
+                        borrow = 1;
+                    } else {
+                        int_data[cur_idx] = minus_calculated;
+                        break;
+                    }
+                }
+            }
+            int_reduction();
+            return *this;
+        } else {
+            is_negative = 1 - is_negative;
+            int_data.resize(int2_len, 0);
+            bool borrow = 0;
+            for (int cur_idx = 0; cur_idx < int2_len; ++cur_idx) {
+                if (cur_idx < int1_len) {
+                    int minus_calculated =
+                        another.int_data[cur_idx] - int_data[cur_idx] - borrow;
+                    if (minus_calculated < 0) {
+                        borrow = 1;
+                        int_data[cur_idx] = minus_calculated + 10;
+                    } else {
+                        borrow = 0;
+                        int_data[cur_idx] = minus_calculated;
+                    }
+                } else {
+                    int minus_calculated = another.int_data[cur_idx] - borrow;
+                    if (minus_calculated < 0) {
+                        int_data[cur_idx] = 10 + minus_calculated;
+                        borrow = 1;
+                    } else {
+                        int_data[cur_idx] = minus_calculated;
+                        break;
+                    }
+                }
+            }
+        }
+        int_reduction();
+        return *this;
+    }
+}
+
+int2048 add(int2048 int1, const int2048& int2) {
+    int1.add(int2);
+    return std::move(int1);
+}
+
+int2048 minus(int2048 int1, const int2048& int2) {
+    int1.minus(int2);
+    return std::move(int1);
 }
 
 }  // namespace sjtu
