@@ -19,7 +19,25 @@
 
 namespace sjtu {
 class int2048 {
-    // todo
+    std::vector<int> int_data;
+    bool is_negative = 0;
+
+    void int_reduction() {
+        int length = int_data.size();
+        if (!length) {
+            is_negative = 0;
+            return;
+        }
+        for (int cur_idx = length - 1; cur_idx >= 0; --cur_idx) {
+            if (int_data[cur_idx]) {
+                int_data.resize(cur_idx + 1);
+                return;
+            }
+        }
+        is_negative = 0;
+        int_data.clear();
+    }
+
    public:
     // 构造函数
     int2048();
@@ -37,6 +55,7 @@ class int2048 {
     void read(const std::string&);
     // 输出储存的大整数，无需换行
     void print();
+    int2048 opposite_num(const int2048&);
 
     // 加上一个大整数
     int2048& add(const int2048&);
