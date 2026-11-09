@@ -34,7 +34,7 @@ int2048::int2048(const std::string& input_int) {
     } else {
         is_negative = 0;
     }
-    int_data.reserve(length - is_negative);
+    int_data.resize(length - is_negative, 0);
     for (int cur_idx = 0; cur_idx < length - is_negative; ++cur_idx) {
         int_data[cur_idx] = int(input_int[length - 1 - cur_idx] - '0');
     }
@@ -80,7 +80,7 @@ void int2048::read(const std::string& input_int) {
     } else {
         is_negative = 0;
     }
-    int_data.reserve(length - is_negative);
+    int_data.resize(length - is_negative, 0);
     for (int cur_idx = 0; cur_idx < length - is_negative; ++cur_idx) {
         char cur_char = input_int[length - 1 - cur_idx];
         int_data[cur_idx] = int(cur_char - '0');
