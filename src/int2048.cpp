@@ -1,4 +1,5 @@
 #include "int2048.h"
+#include <cstddef>
 #include <cstdio>
 #include <ratio>
 #include <string>
@@ -9,17 +10,17 @@ int2048::int2048() {}
 
 int2048::int2048(long long input_int) {
     int_data.clear();
+    size_t input_abs;
     if (input_int < 0) {
         is_negative = 1;
-        input_int = -input_int;
+        input_abs = -(size_t)(input_int);
     } else {
         is_negative = 0;
+        input_abs = input_int;
     }
-    int cur_idx = 0;
-
-    while (input_int) {
-        int_data.push_back(input_int % 10);
-        input_int /= 10;
+    while (input_abs) {
+        int_data.push_back(input_abs % 10);
+        input_abs /= 10;
     }
 }
 
