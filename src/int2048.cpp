@@ -217,7 +217,7 @@ int2048& int2048::minus(const int2048& another) {
                         borrow = 1;
                     } else {
                         int_data[cur_idx] = minus_calculated;
-                        break;
+                        borrow = 0;
                     }
                 }
             }
