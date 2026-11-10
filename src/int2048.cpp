@@ -238,4 +238,74 @@ int2048 minus(int2048 int1, const int2048& int2) {
     return std::move(int1);
 }
 
+int2048 int2048::operator+() const { return *this; }
+
+int2048 int2048::operator-() const {
+    int2048 result;
+    result.is_negative = 1 - is_negative;
+    result.int_data = std::move(int_data);
+    result.int_reduction();
+    return result;
+}
+
+int2048& int2048::operator+=(const int2048& another) {
+    add(another);
+    return *this;
+}
+
+int2048 operator+(int2048 int1, const int2048& int2) {
+    return std::move(add(int1, int2));
+}
+
+int2048& int2048::operator-=(const int2048& another) {
+    minus(another);
+    return *this;
+}
+
+int2048 operator-(int2048 int1, const int2048& int2) {
+    return std::move(minus(int1, int2));
+}
+
+int2048& int2048::operator*=(const int2048& another) {
+    int int1_len = int_data.size();
+    int int2_len = another.int_data.size();
+    is_negative = (is_negative ^ (another.is_negative));
+    long max_possible_len = int2_len + int1_len;
+    int2048 result;
+    result.is_negative = (is_negative ^ (another.is_negative));
+    result.int_data.resize(max_possible_len, 0);
+    for (int ano_cur_idx = 0; ano_cur_idx < int2_len; ++ano_cur_idx) {
+        int carry = 0;
+        for (int cur_idx = 0; cur_idx < int1_len; ++cur_idx) {
+            long cur_result_idx = cur_idx + ano_cur_idx;
+            int calculated = int_data[cur_idx] * another.int_data[ano_cur_idx] +
+                             carry + result.int_data[cur_result_idx];
+            carry = calculated / 10;
+            result.int_data[cur_result_idx] = calculated % 10;
+        }
+    }
+    result.int_reduction();
+    is_negative = result.is_negative;
+    int_data = std::move(result.int_data);
+    return *this;
+}
+
+int2048 operator*(int2048 int1, const int2048& int2) {
+    int1 *= int2;
+    return std::move(int1);
+}
+
+int2048& int2048::operator/=(const int2048& another) {
+    int int1_len = int_data.size();
+    int int2_len = another.int_data.size();
+    if (int2_len < 1) {
+        std::cerr << "can't divided by 0\n";
+        return *this;
+    }
+    if (int1_len < 1) {
+        return *this;
+    }
+}
+
+
 }  // namespace sjtu
