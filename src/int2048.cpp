@@ -497,10 +497,14 @@ std::istream& operator>>(std::istream& in, int2048& an_int) {
     return in;
 }
 std::ostream& operator<<(std::ostream& out, const int2048& an_int) {
+    int length = an_int.int_data.size();
+    if (!length) {
+        out << '0';
+        return out;
+    }
     if (an_int.is_negative) {
         out << '-';
     }
-    int length = an_int.int_data.size();
     for (int cur_idx = length - 1; cur_idx >= 0; --cur_idx) {
         out << char('0' + an_int.int_data[cur_idx]);
     }
