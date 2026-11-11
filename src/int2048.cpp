@@ -286,11 +286,11 @@ int2048& int2048::operator*=(const int2048& another) {
     is_negative = (is_negative ^ (another.is_negative));
     long max_possible_len = int2_len + int1_len;
     int2048 result;
-    result.is_negative = (is_negative ^ (another.is_negative));
     result.int_data.resize(max_possible_len, 0);
     for (int ano_cur_idx = 0; ano_cur_idx < int2_len; ++ano_cur_idx) {
         int carry = 0;
-        for (int cur_idx = 0; cur_idx < max_possible_len; ++cur_idx) {
+        for (int cur_idx = 0; cur_idx < max_possible_len - ano_cur_idx;
+             ++cur_idx) {
             long cur_result_idx = cur_idx + ano_cur_idx;
             int calculated;
             if (cur_idx >= int1_len) {
@@ -300,6 +300,7 @@ int2048& int2048::operator*=(const int2048& another) {
                 if (!carry) {
                     break;
                 }
+                continue;
             }
             calculated = int_data[cur_idx] * another.int_data[ano_cur_idx] +
                          carry + result.int_data[cur_result_idx];
@@ -468,14 +469,16 @@ int2048& int2048::operator/=(const int2048& another) {
     if (int1_len < 1) {
         return *this;
     }
-    is_negative = (is_negative ^ (another.is_negative));
+    bool result_negative = (is_negative ^ (another.is_negative));
     if (!compare_abs(*this, another)) {
-        if (is_negative) {
+        if (result_negative) {
             int_data.clear();
             int_data.push_back(1);
+            is_negative = result_negative;
             return *this;
         } else {
             int_data.clear();
+            is_negative = result_negative;
             return *this;
         }
     }
@@ -504,13 +507,15 @@ int2048& int2048::operator/=(const int2048& another) {
     // }
     // std::cerr << '\n';
 
-    if (int_data.size() && is_negative) {
+    if (int_data.size() && result_negative) {
         int_data = std::move(int_result);
         int_reduction();
+        is_negative = result_negative;
         (*this) -= int2048(1);
     } else {
         int_data = std::move(int_result);
         int_reduction();
+        is_negative = result_negative;
     }
 
     // std::cerr << "div res len: " << int_data.size() << '\n';
