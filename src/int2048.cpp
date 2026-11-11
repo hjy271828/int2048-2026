@@ -370,7 +370,6 @@ int find_quotient(std::vector<int>& dividend, const std::vector<int>& divisor,
             }
         }
     } else {
-        assert(start > 0);
         search_l =
             (10 * dividend[dividend_size - 1] + dividend[dividend_size - 2]) /
             (divisor[l2 - 1] + 1);
@@ -415,7 +414,7 @@ int find_quotient(std::vector<int>& dividend, const std::vector<int>& divisor,
         // std::cerr << "find quotient: " << ans << '\n';
 
         // for (int i = dividend.size() - 1; i >= 0; --i) {
-        //     std::cerr << dividend[i] << ' ';
+        //     std::cerr << dividend[i];
         // }
         // std::cerr << '\n';
 
@@ -424,14 +423,15 @@ int find_quotient(std::vector<int>& dividend, const std::vector<int>& divisor,
             int calculated;
             if (cur_idx >= l2) {
                 calculated = carry;
+            } else {
+                calculated = carry + divisor[cur_idx] * ans;
             }
-            calculated = carry + divisor[cur_idx] * ans;
             carry = calculated / 10;
             tmp[cur_idx] = calculated % 10;
         }
 
         // for (int i = tmp.size() - 1; i >= 0; --i) {
-        //     std::cerr << tmp[i] << ' ';
+        //     std::cerr << tmp[i];
         // }
         // std::cerr << '\n';
 
@@ -450,7 +450,7 @@ int find_quotient(std::vector<int>& dividend, const std::vector<int>& divisor,
 
         // std::cerr << "dividend changed: \n";
         // for (int i = dividend.size() - 1; i >= 0; --i) {
-        //     std::cerr << dividend[i] << ' ';
+        //     std::cerr << dividend[i];
         // }
         // std::cerr << '\n';
     }
@@ -461,7 +461,6 @@ int find_quotient(std::vector<int>& dividend, const std::vector<int>& divisor,
 int2048& int2048::operator/=(const int2048& another) {
     int int1_len = int_data.size();
     int int2_len = another.int_data.size();
-    is_negative = (is_negative ^ (another.is_negative));
     if (int2_len < 1) {
         std::cerr << "can't divided by 0\n";
         return *this;
@@ -469,13 +468,14 @@ int2048& int2048::operator/=(const int2048& another) {
     if (int1_len < 1) {
         return *this;
     }
+    is_negative = (is_negative ^ (another.is_negative));
     if (!compare_abs(*this, another)) {
         if (is_negative) {
             int_data.clear();
+            int_data.push_back(1);
             return *this;
         } else {
             int_data.clear();
-            int_data.push_back(1);
             return *this;
         }
     }
@@ -500,7 +500,7 @@ int2048& int2048::operator/=(const int2048& another) {
     }
 
     // for (int i = int_result.size() - 1; i >= 0; --i) {
-    //     std::cerr << int_result[i] << ' ';
+    //     std::cerr << int_result[i];
     // }
     // std::cerr << '\n';
 
@@ -513,6 +513,7 @@ int2048& int2048::operator/=(const int2048& another) {
         int_reduction();
     }
 
+    // std::cerr << "div res len: " << int_data.size() << '\n';
     return *this;
 }
 
