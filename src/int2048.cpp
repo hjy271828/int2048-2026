@@ -249,6 +249,13 @@ int2048 int2048::operator-() const {
     return result;
 }
 
+int2048& int2048::operator=(const int2048& another) {
+    is_negative = another.is_negative;
+    int_data = std::move(another.int_data);
+    return *this;
+}
+
+
 int2048& int2048::operator+=(const int2048& another) {
     add(another);
     return *this;
@@ -466,5 +473,22 @@ int2048 operator/(int2048 int1, const int2048& int2) {
     return std::move(int1);
 }
 
+int2048& int2048::operator%=(const int2048&) { return *this; }
+int2048 operator%(int2048 int1, const int2048& int2) { return int1; }
 
+std::istream& operator>>(std::istream& in, int2048& an_int) {
+    std::string str;
+    in >> str;
+    return in;
+}
+std::ostream& operator<<(std::ostream& out, const int2048& an_int) {
+    return out;
+}
+
+bool operator==(const int2048& int1, const int2048& int2) { return 1; }
+bool operator!=(const int2048& int1, const int2048& int2) { return 0; }
+bool operator<(const int2048& int1, const int2048& int2) { return 1; }
+bool operator>(const int2048& int1, const int2048& int2) { return 1; }
+bool operator<=(const int2048& int1, const int2048& int2) { return 1; }
+bool operator>=(const int2048& int1, const int2048& int2) { return 1; }
 }  // namespace sjtu
