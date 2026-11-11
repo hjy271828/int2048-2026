@@ -278,6 +278,11 @@ int2048 operator-(int2048 int1, const int2048& int2) {
 int2048& int2048::operator*=(const int2048& another) {
     int int1_len = int_data.size();
     int int2_len = another.int_data.size();
+    if ((!int1_len) || (!int2_len)) {
+        is_negative = 0;
+        int_data.clear();
+        return *this;
+    }
     is_negative = (is_negative ^ (another.is_negative));
     long max_possible_len = int2_len + int1_len;
     int2048 result;
@@ -285,16 +290,24 @@ int2048& int2048::operator*=(const int2048& another) {
     result.int_data.resize(max_possible_len, 0);
     for (int ano_cur_idx = 0; ano_cur_idx < int2_len; ++ano_cur_idx) {
         int carry = 0;
-        for (int cur_idx = 0; cur_idx < int1_len; ++cur_idx) {
+        for (int cur_idx = 0; cur_idx < max_possible_len; ++cur_idx) {
             long cur_result_idx = cur_idx + ano_cur_idx;
-            int calculated = int_data[cur_idx] * another.int_data[ano_cur_idx] +
-                             carry + result.int_data[cur_result_idx];
+            int calculated;
+            if (cur_idx >= int1_len) {
+                calculated = carry + result.int_data[cur_result_idx];
+                carry = calculated / 10;
+                result.int_data[cur_result_idx] = calculated % 10;
+                if (!carry) {
+                    break;
+                }
+            }
+            calculated = int_data[cur_idx] * another.int_data[ano_cur_idx] +
+                         carry + result.int_data[cur_result_idx];
             carry = calculated / 10;
             result.int_data[cur_result_idx] = calculated % 10;
         }
     }
     result.int_reduction();
-    is_negative = result.is_negative;
     int_data = std::move(result.int_data);
     return *this;
 }
