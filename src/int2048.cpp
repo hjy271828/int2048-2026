@@ -522,8 +522,14 @@ int2048 operator/(int2048 int1, const int2048& int2) {
     return std::move(int1);
 }
 
-int2048& int2048::operator%=(const int2048&) { return *this; }
-int2048 operator%(int2048 int1, const int2048& int2) { return int1; }
+int2048& int2048::operator%=(const int2048& another) {
+    (*this) -= ((*this) / another) * another;
+    return *this;
+}
+int2048 operator%(int2048 int1, const int2048& int2) {
+    int1 %= int2;
+    return std::move(int1);
+}
 
 std::istream& operator>>(std::istream& in, int2048& an_int) {
     std::string str;
