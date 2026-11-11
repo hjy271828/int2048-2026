@@ -1,4 +1,5 @@
 #include "int2048.h"
+#include <cassert>
 #include <cstddef>
 #include <cstdio>
 #include <ratio>
@@ -295,9 +296,124 @@ int2048 operator*(int2048 int1, const int2048& int2) {
     return std::move(int1);
 }
 
+int find_quotient(std::vector<int>& dividend, const std::vector<int>& divisor,
+                  int start) {
+    int dividend_size = dividend.size();
+    int l1 = dividend_size - start;
+    int l2 = divisor.size();
+    if (l1 < l2) {
+        return 0;
+    }
+    // l1==l2 或 l1==l2+1
+
+    std::vector<int> tmp;
+    tmp.resize(l2, 0);
+    int search_l, search_r;
+    int ans = 0;
+
+    if (l1 == l2) {
+        search_l = dividend[dividend_size - 1] / (divisor[l2 - 1] + 1);
+        search_r = (dividend[dividend_size] + 1) / divisor[l2 - 1];
+        while (search_l < search_r) {
+            int mid = search_l + (search_r - search_l) / 2;
+            bool valid = 1;
+            bool curr_is_bigger = 0;
+            int carry = 0;
+            for (int cur_idx = 0; cur_idx < l1; ++cur_idx) {
+                int calculated = carry + divisor[cur_idx] * mid;
+                carry = calculated / 10;
+                tmp[cur_idx] = calculated % 10;
+                if (calculated % 10 > dividend[cur_idx + start]) {
+                    curr_is_bigger = 1;
+                } else {
+                    curr_is_bigger = 0;
+                }
+                if (cur_idx == l1 - 1) {
+                    if (curr_is_bigger || carry) {
+                        valid = 0;
+                        break;
+                    }
+                }
+            }
+            if (valid) {
+                ans = mid;
+                search_l = mid + 1;
+            } else {
+                search_r = mid - 1;
+            }
+        }
+    } else {
+        assert(start > 0);
+        search_l =
+            (10 * dividend[dividend_size - 1] + dividend[dividend_size - 2]) /
+            (divisor[l2 - 1] + 1);
+        search_r = (10 * dividend[dividend_size - 1] +
+                    dividend[dividend_size - 2] + 1) /
+                   divisor[l2 - 1];
+        int ans = 0;
+        while (search_l < search_r) {
+            int mid = search_l + (search_r - search_l) / 2;
+            bool valid = 1;
+            bool curr_is_bigger = 0;
+            int carry = 0;
+            for (int cur_idx = 0; cur_idx < l1; ++cur_idx) {
+                if (cur_idx == l1 - 1) {
+                    if (curr_is_bigger && carry == dividend[cur_idx + start] ||
+                        carry > dividend[cur_idx + start]) {
+                        valid = 0;
+                        break;
+                    }
+                }
+                int calculated = carry + divisor[cur_idx] * mid;
+                carry = calculated / 10;
+                tmp[cur_idx] = calculated % 10;
+                if (calculated % 10 > dividend[cur_idx + start]) {
+                    curr_is_bigger = 1;
+                } else {
+                    curr_is_bigger = 0;
+                }
+                if (cur_idx == l1 - 1) {
+                    if (curr_is_bigger || carry) {
+                        valid = 0;
+                        break;
+                    }
+                }
+            }
+            if (valid) {
+                ans = mid;
+                search_l = mid + 1;
+            } else {
+                search_r = mid - 1;
+            }
+        }
+    }
+
+    if (ans) {
+        int borrow = 0;
+        for (int cur_idx = 0; cur_idx < l1; ++cur_idx) {
+            int calculated;
+            if (cur_idx < l2) {
+                calculated = dividend[start + cur_idx] - tmp[cur_idx] - borrow;
+            } else {
+                calculated = dividend[start + cur_idx] - borrow;
+            }
+            if (calculated >= 0) {
+                borrow = 0;
+                dividend[start + cur_idx] = calculated;
+            } else {
+                borrow = 1;
+                dividend[start + cur_idx] = calculated + 10;
+            }
+        }
+    }
+
+    return ans;
+}
+
 int2048& int2048::operator/=(const int2048& another) {
     int int1_len = int_data.size();
     int int2_len = another.int_data.size();
+    is_negative = (is_negative ^ (another.is_negative));
     if (int2_len < 1) {
         std::cerr << "can't divided by 0\n";
         return *this;
@@ -305,6 +421,49 @@ int2048& int2048::operator/=(const int2048& another) {
     if (int1_len < 1) {
         return *this;
     }
+    if (!compare_abs(*this, another)) {
+        if (is_negative) {
+            int_data.clear();
+            return *this;
+        } else {
+            int_data.clear();
+            int_data.push_back(1);
+            return *this;
+        }
+    }
+    int start = int1_len - int2_len;
+    std::vector<int> int_result;
+    int_result.resize(start + 1, 0);
+    while (start >= 0) {
+        int finded_quotient = find_quotient(int_data, another.int_data, start);
+        if (finded_quotient) {
+            int_result[start] = finded_quotient;
+            int_reduction();
+            start = int_data.size() - int2_len;
+        } else {
+            if (start == 0) {
+                break;
+            }
+            start--;
+        }
+    }
+
+
+    if (int_data.size() && is_negative) {
+        int_data = std::move(int_result);
+        int_reduction();
+        (*this) -= int2048(1);
+    } else {
+        int_data = std::move(int_result);
+        int_reduction();
+    }
+
+    return *this;
+}
+
+int2048 operator/(int2048 int1, const int2048& int2) {
+    int1 /= int2;
+    return std::move(int1);
 }
 
 
