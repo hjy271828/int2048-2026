@@ -548,7 +548,7 @@ std::ostream& operator<<(std::ostream& out, const int2048& an_int) {
 bool operator==(const int2048& int1, const int2048& int2) {
     int int1_len = int1.int_data.size();
     int int2_len = int2.int_data.size();
-    if (int1_len != int2_len) {
+    if (int1_len != int2_len || int1.is_negative != int2.is_negative) {
         return false;
     }
     for (int cur_idx = 0; cur_idx < int1_len; ++cur_idx) {
@@ -561,7 +561,7 @@ bool operator==(const int2048& int1, const int2048& int2) {
 bool operator!=(const int2048& int1, const int2048& int2) {
     int int1_len = int1.int_data.size();
     int int2_len = int2.int_data.size();
-    if (int1_len != int2_len) {
+    if (int1_len != int2_len || int1.is_negative != int2.is_negative) {
         return true;
     }
     for (int cur_idx = 0; cur_idx < int1_len; ++cur_idx) {
