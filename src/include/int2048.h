@@ -24,8 +24,6 @@ class int2048 {
 
     void int_reduction();
 
-    bool compare_abs(const int2048&, const int2048&);
-
    public:
     // 构造函数
     int2048();
@@ -88,6 +86,8 @@ class int2048 {
     friend bool operator>(const int2048&, const int2048&);
     friend bool operator<=(const int2048&, const int2048&);
     friend bool operator>=(const int2048&, const int2048&);
+
+    friend bool compare_abs(const int2048&, const int2048&);
 };
 }  // namespace sjtu
 

@@ -150,7 +150,8 @@ int2048& int2048::add(const int2048& another) {
     }
 }
 
-bool int2048::compare_abs(const int2048& int1, const int2048& int2) {
+// return abs(int1)>=abs(int2)
+bool compare_abs(const int2048& int1, const int2048& int2) {
     int int1_len = int1.int_data.size();
     int int2_len = int2.int_data.size();
     if (int1_len != int2_len) {
@@ -479,16 +480,70 @@ int2048 operator%(int2048 int1, const int2048& int2) { return int1; }
 std::istream& operator>>(std::istream& in, int2048& an_int) {
     std::string str;
     in >> str;
+    an_int = int2048(str);
     return in;
 }
 std::ostream& operator<<(std::ostream& out, const int2048& an_int) {
+    if (an_int.is_negative) {
+        out << '-';
+    }
+    int length = an_int.int_data.size();
+    for (int cur_idx = length - 1; cur_idx >= 0; --cur_idx) {
+        out << char('0' + an_int.int_data[cur_idx]);
+    }
     return out;
 }
 
-bool operator==(const int2048& int1, const int2048& int2) { return 1; }
-bool operator!=(const int2048& int1, const int2048& int2) { return 0; }
-bool operator<(const int2048& int1, const int2048& int2) { return 1; }
-bool operator>(const int2048& int1, const int2048& int2) { return 1; }
-bool operator<=(const int2048& int1, const int2048& int2) { return 1; }
-bool operator>=(const int2048& int1, const int2048& int2) { return 1; }
+bool operator==(const int2048& int1, const int2048& int2) {
+    int int1_len = int1.int_data.size();
+    int int2_len = int2.int_data.size();
+    if (int1_len != int2_len) {
+        return false;
+    }
+    for (int cur_idx = 0; cur_idx < int1_len; ++cur_idx) {
+        if (int1.int_data[cur_idx] != int2.int_data[cur_idx]) {
+            return false;
+        }
+    }
+    return 1;
+}
+bool operator!=(const int2048& int1, const int2048& int2) {
+    int int1_len = int1.int_data.size();
+    int int2_len = int2.int_data.size();
+    if (int1_len != int2_len) {
+        return true;
+    }
+    for (int cur_idx = 0; cur_idx < int1_len; ++cur_idx) {
+        if (int1.int_data[cur_idx] != int2.int_data[cur_idx]) {
+            return true;
+        }
+    }
+    return 0;
+}
+bool operator<(const int2048& int1, const int2048& int2) {
+    if (int1.is_negative != int2.is_negative) {
+        return int1.is_negative > int2.is_negative;
+    }
+    if (!(int1.is_negative)) {
+        return !(compare_abs(int1, int2));
+    } else {
+        return !(compare_abs(int2, int1));
+    }
+}
+bool operator>(const int2048& int1, const int2048& int2) {
+    if (int1.is_negative != int2.is_negative) {
+        return int1.is_negative < int2.is_negative;
+    }
+    if (!(int1.is_negative)) {
+        return !(compare_abs(int2, int1));
+    } else {
+        return !(compare_abs(int1, int2));
+    }
+}
+bool operator<=(const int2048& int1, const int2048& int2) {
+    return !(int1 > int2);
+}
+bool operator>=(const int2048& int1, const int2048& int2) {
+    return !(int2 > int1);
+}
 }  // namespace sjtu
