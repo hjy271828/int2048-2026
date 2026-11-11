@@ -319,6 +319,7 @@ int2048 operator*(int2048 int1, const int2048& int2) {
 
 int find_quotient(std::vector<int>& dividend, const std::vector<int>& divisor,
                   int start) {
+    // std::cerr << "start: " << start << '\n';
     int dividend_size = dividend.size();
     int l1 = dividend_size - start;
     int l2 = divisor.size();
@@ -328,14 +329,15 @@ int find_quotient(std::vector<int>& dividend, const std::vector<int>& divisor,
     // l1==l2 或 l1==l2+1
 
     std::vector<int> tmp;
-    tmp.resize(l2, 0);
+    tmp.resize(l1, 0);
     int search_l, search_r;
     int ans = 0;
 
     if (l1 == l2) {
         search_l = dividend[dividend_size - 1] / (divisor[l2 - 1] + 1);
-        search_r = (dividend[dividend_size] + 1) / divisor[l2 - 1];
-        while (search_l < search_r) {
+        search_r = (dividend[dividend_size - 1] + 1) / divisor[l2 - 1];
+        while (search_l <= search_r) {
+            // std::cerr << "l: " << search_l << " r: " << search_r << "\n";
             int mid = search_l + (search_r - search_l) / 2;
             bool valid = 1;
             bool curr_is_bigger = 0;
@@ -343,13 +345,17 @@ int find_quotient(std::vector<int>& dividend, const std::vector<int>& divisor,
             for (int cur_idx = 0; cur_idx < l1; ++cur_idx) {
                 int calculated = carry + divisor[cur_idx] * mid;
                 carry = calculated / 10;
-                tmp[cur_idx] = calculated % 10;
                 if (calculated % 10 > dividend[cur_idx + start]) {
                     curr_is_bigger = 1;
-                } else {
+                } else if (calculated % 10 < dividend[cur_idx + start]) {
                     curr_is_bigger = 0;
                 }
                 if (cur_idx == l1 - 1) {
+                    // std::cerr
+                    //     << "mid: " << mid << " calculate%10 " << calculated %
+                    //     10
+                    //     << " dividend: " << dividend[cur_idx + start] << " "
+                    //     << curr_is_bigger << '\n';
                     if (curr_is_bigger || carry) {
                         valid = 0;
                         break;
@@ -371,33 +377,29 @@ int find_quotient(std::vector<int>& dividend, const std::vector<int>& divisor,
         search_r = (10 * dividend[dividend_size - 1] +
                     dividend[dividend_size - 2] + 1) /
                    divisor[l2 - 1];
-        int ans = 0;
-        while (search_l < search_r) {
+        while (search_l <= search_r) {
+            // std::cerr << "l: " << search_l << " r: " << search_r << "\n";
             int mid = search_l + (search_r - search_l) / 2;
             bool valid = 1;
             bool curr_is_bigger = 0;
             int carry = 0;
             for (int cur_idx = 0; cur_idx < l1; ++cur_idx) {
+                int calculated;
                 if (cur_idx == l1 - 1) {
                     if (curr_is_bigger && carry == dividend[cur_idx + start] ||
                         carry > dividend[cur_idx + start]) {
                         valid = 0;
                         break;
                     }
+                    calculated = carry;
+                    break;
                 }
-                int calculated = carry + divisor[cur_idx] * mid;
+                calculated = carry + divisor[cur_idx] * mid;
                 carry = calculated / 10;
-                tmp[cur_idx] = calculated % 10;
                 if (calculated % 10 > dividend[cur_idx + start]) {
                     curr_is_bigger = 1;
-                } else {
+                } else if (calculated % 10 < dividend[cur_idx + start]) {
                     curr_is_bigger = 0;
-                }
-                if (cur_idx == l1 - 1) {
-                    if (curr_is_bigger || carry) {
-                        valid = 0;
-                        break;
-                    }
                 }
             }
             if (valid) {
@@ -410,14 +412,33 @@ int find_quotient(std::vector<int>& dividend, const std::vector<int>& divisor,
     }
 
     if (ans) {
+        // std::cerr << "find quotient: " << ans << '\n';
+
+        // for (int i = dividend.size() - 1; i >= 0; --i) {
+        //     std::cerr << dividend[i] << ' ';
+        // }
+        // std::cerr << '\n';
+
+        int carry = 0;
+        for (int cur_idx = 0; cur_idx < l1; ++cur_idx) {
+            int calculated;
+            if (cur_idx >= l2) {
+                calculated = carry;
+            }
+            calculated = carry + divisor[cur_idx] * ans;
+            carry = calculated / 10;
+            tmp[cur_idx] = calculated % 10;
+        }
+
+        // for (int i = tmp.size() - 1; i >= 0; --i) {
+        //     std::cerr << tmp[i] << ' ';
+        // }
+        // std::cerr << '\n';
+
         int borrow = 0;
         for (int cur_idx = 0; cur_idx < l1; ++cur_idx) {
             int calculated;
-            if (cur_idx < l2) {
-                calculated = dividend[start + cur_idx] - tmp[cur_idx] - borrow;
-            } else {
-                calculated = dividend[start + cur_idx] - borrow;
-            }
+            calculated = dividend[start + cur_idx] - tmp[cur_idx] - borrow;
             if (calculated >= 0) {
                 borrow = 0;
                 dividend[start + cur_idx] = calculated;
@@ -426,6 +447,12 @@ int find_quotient(std::vector<int>& dividend, const std::vector<int>& divisor,
                 dividend[start + cur_idx] = calculated + 10;
             }
         }
+
+        // std::cerr << "dividend changed: \n";
+        // for (int i = dividend.size() - 1; i >= 0; --i) {
+        //     std::cerr << dividend[i] << ' ';
+        // }
+        // std::cerr << '\n';
     }
 
     return ans;
@@ -460,6 +487,9 @@ int2048& int2048::operator/=(const int2048& another) {
         if (finded_quotient) {
             int_result[start] = finded_quotient;
             int_reduction();
+            if (start == 0) {
+                break;
+            }
             start = int_data.size() - int2_len;
         } else {
             if (start == 0) {
@@ -469,6 +499,10 @@ int2048& int2048::operator/=(const int2048& another) {
         }
     }
 
+    // for (int i = int_result.size() - 1; i >= 0; --i) {
+    //     std::cerr << int_result[i] << ' ';
+    // }
+    // std::cerr << '\n';
 
     if (int_data.size() && is_negative) {
         int_data = std::move(int_result);
