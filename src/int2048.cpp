@@ -1,9 +1,8 @@
 #include "int2048.h"
+namespace sjtu {
 
 const int BASE = 10000;
 const int BASE_LENGTH = 4;
-
-namespace sjtu {
 
 int2048::int2048() {}
 
