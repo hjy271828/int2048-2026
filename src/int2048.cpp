@@ -322,8 +322,8 @@ void karatsuba_mul(const std::vector<int>& int1_data, int int1_start,
                 carry = calculated / BASE;
                 result[cur_result_idx] = calculated % BASE;
             }
-            return;
         }
+        return;
     }
     int n = std::max(int1_len, int2_len);
     int m = n / 2 + 1;
@@ -333,8 +333,10 @@ void karatsuba_mul(const std::vector<int>& int1_data, int int1_start,
                   int2_start, std::min(m, int2_len), z0);
     std::vector<int> z2;
     z2.resize((n - m) * 2, 0);
-    karatsuba_mul(int1_data, m, std::max(0, std::min(n - m, int1_len - m)),
-                  int2_data, m, std::max(0, std::min(n - m, int1_len - m)), z2);
+    karatsuba_mul(int1_data, int1_start + m,
+                  std::max(0, std::min(n - m, int1_len - m)), int2_data,
+                  int2_start + m, std::max(0, std::min(n - m, int2_len - m)),
+                  z2);
 
     int plus_size = std::max(n - m, m) + 1;
     std::vector<int> x1_plus_x0;
@@ -345,10 +347,10 @@ void karatsuba_mul(const std::vector<int>& int1_data, int int1_start,
     int carry = 0;
     for (int cur_idx = 0; cur_idx < plus_size; ++cur_idx) {
         int calculated = carry;
-        if (cur_idx < m) {
+        if (cur_idx < m && cur_idx < int1_len) {
             calculated += int1_data[int1_start + cur_idx];
         }
-        if (cur_idx + m < n) {
+        if (cur_idx + m < n && cur_idx + m < int1_len) {
             calculated += int1_data[int1_start + m + cur_idx];
         }
         carry = calculated / BASE;
@@ -358,11 +360,11 @@ void karatsuba_mul(const std::vector<int>& int1_data, int int1_start,
     carry = 0;
     for (int cur_idx = 0; cur_idx < plus_size; ++cur_idx) {
         int calculated = carry;
-        if (cur_idx < m) {
+        if (cur_idx < m && cur_idx < int2_len) {
             calculated += int2_data[int2_start + cur_idx];
         }
-        if (cur_idx + m < n) {
-            calculated += int2_data[int2_start + cur_idx];
+        if (cur_idx + m < n && cur_idx + m < int2_len) {
+            calculated += int2_data[int2_start + m + cur_idx];
         }
         carry = calculated / BASE;
         y1_plus_y0[cur_idx] = calculated % BASE;
@@ -386,8 +388,8 @@ void karatsuba_mul(const std::vector<int>& int1_data, int int1_start,
             calculated -= z2[cur_idx];
         }
         if (calculated < 0) {
-            borrow = (calculated % BASE == 0) ? (calculated / BASE)
-                                              : (calculated / BASE + 1);
+            borrow = (calculated % BASE == 0) ? (-calculated / BASE)
+                                              : ((-calculated / BASE) + 1);
         } else {
             borrow = 0;
         }
@@ -438,6 +440,7 @@ int2048& int2048::operator*=(const int2048& another) {
     std::vector<int> result;
     result.resize(2 * bigger_len, 0);
     karatsuba_mul(int_data, 0, int1_len, another.int_data, 0, int2_len, result);
+    int_data = std::move(result);
     int_reduction();
     return *this;
 }
