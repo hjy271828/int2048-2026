@@ -297,7 +297,7 @@ void karatsuba_mul(const std::vector<int>& int1_data, int int1_start,
         std::memset(result.data(), 0, result.size() * sizeof(int));
         return;
     }
-    if (int1_len + int2_len <= 64) {
+    if (int1_len + int2_len <= 32) {
         long max_possible_len = int2_len + int1_len;
         for (int ano_cur_idx = 0; ano_cur_idx < int2_len; ++ano_cur_idx) {
             int carry = 0;
