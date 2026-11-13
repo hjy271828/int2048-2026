@@ -1,9 +1,4 @@
 #include "int2048.h"
-#include <cassert>
-#include <cstddef>
-#include <cstdio>
-#include <ratio>
-#include <string>
 
 const int BASE = 10000;
 const int BASE_LENGTH = 4;
