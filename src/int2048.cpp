@@ -44,8 +44,9 @@ int2048::int2048(const std::string& input_int) {
                               : ((length - is_negative) / BASE_LENGTH + 1);
     int_data.resize(int_data_length, 0);
     for (int cur_idx = length - is_negative - 1; cur_idx >= 0; --cur_idx) {
-        int_data[cur_idx / BASE_LENGTH] = int_data[cur_idx / BASE_LENGTH] * 10 +
-                                          int(input_int[cur_idx] - '0');
+        int_data[cur_idx / BASE_LENGTH] =
+            int_data[cur_idx / BASE_LENGTH] * 10 +
+            int(input_int[length - 1 - cur_idx] - '0');
     }
     int_reduction();
 }
@@ -94,8 +95,9 @@ void int2048::read(const std::string& input_int) {
                               : ((length - is_negative) / BASE_LENGTH + 1);
     int_data.resize(int_data_length, 0);
     for (int cur_idx = length - is_negative - 1; cur_idx >= 0; --cur_idx) {
-        int_data[cur_idx / BASE_LENGTH] = int_data[cur_idx / BASE_LENGTH] * 10 +
-                                          int(input_int[cur_idx] - '0');
+        int_data[cur_idx / BASE_LENGTH] =
+            int_data[cur_idx / BASE_LENGTH] * 10 +
+            int(input_int[length - 1 - cur_idx] - '0');
     }
     int_reduction();
 }
