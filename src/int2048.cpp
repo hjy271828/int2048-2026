@@ -139,6 +139,9 @@ int2048 int2048::opposite_num(const int2048& another) {
 }
 
 int2048& int2048::add(const int2048& another) {
+    if (another.int_data.empty()) {
+        return *this;
+    }
     int int1_len = int_data.size();
     int int2_len = another.int_data.size();
     int max_possible_len = std::max(int1_len, int2_len) + 1;
@@ -184,6 +187,9 @@ bool compare_abs(const int2048& int1, const int2048& int2) {
 }
 
 int2048& int2048::minus(const int2048& another) {
+    if (another.int_data.empty()) {
+        return *this;
+    }
     int int1_len = int_data.size();
     int int2_len = another.int_data.size();
     if (is_negative != another.is_negative) {
