@@ -5,8 +5,8 @@
 #include <ratio>
 #include <string>
 
-const int BASE = 100;
-const int BASE_LENGTH = 2;
+const int BASE = 10000;
+const int BASE_LENGTH = 4;
 
 namespace sjtu {
 
