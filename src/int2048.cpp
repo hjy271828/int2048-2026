@@ -5,6 +5,9 @@
 #include <ratio>
 #include <string>
 
+const int BASE = 100;
+const int BASE_LENGTH = 2;
+
 namespace sjtu {
 
 int2048::int2048() {}
@@ -20,8 +23,8 @@ int2048::int2048(long long input_int) {
         input_abs = input_int;
     }
     while (input_abs) {
-        int_data.push_back(input_abs % 10);
-        input_abs /= 10;
+        int_data.push_back(input_abs % BASE);
+        input_abs /= BASE;
     }
 }
 
@@ -36,9 +39,13 @@ int2048::int2048(const std::string& input_int) {
     } else {
         is_negative = 0;
     }
-    int_data.resize(length - is_negative, 0);
-    for (int cur_idx = 0; cur_idx < length - is_negative; ++cur_idx) {
-        int_data[cur_idx] = int(input_int[length - 1 - cur_idx] - '0');
+    int int_data_length = ((length - is_negative) % BASE_LENGTH == 0)
+                              ? ((length - is_negative) / BASE_LENGTH)
+                              : ((length - is_negative) / BASE_LENGTH + 1);
+    int_data.resize(int_data_length, 0);
+    for (int cur_idx = length - is_negative - 1; cur_idx >= 0; --cur_idx) {
+        int_data[cur_idx / BASE_LENGTH] = int_data[cur_idx / BASE_LENGTH] * 10 +
+                                          int(input_int[cur_idx] - '0');
     }
     int_reduction();
 }
@@ -82,10 +89,13 @@ void int2048::read(const std::string& input_int) {
     } else {
         is_negative = 0;
     }
-    int_data.resize(length - is_negative, 0);
-    for (int cur_idx = 0; cur_idx < length - is_negative; ++cur_idx) {
-        char cur_char = input_int[length - 1 - cur_idx];
-        int_data[cur_idx] = int(cur_char - '0');
+    int int_data_length = ((length - is_negative) % BASE_LENGTH == 0)
+                              ? ((length - is_negative) / BASE_LENGTH)
+                              : ((length - is_negative) / BASE_LENGTH + 1);
+    int_data.resize(int_data_length, 0);
+    for (int cur_idx = length - is_negative - 1; cur_idx >= 0; --cur_idx) {
+        int_data[cur_idx / BASE_LENGTH] = int_data[cur_idx / BASE_LENGTH] * 10 +
+                                          int(input_int[cur_idx] - '0');
     }
     int_reduction();
 }
@@ -103,7 +113,13 @@ void int2048::print() {
     }
     for (int cur_idx = length - 1; cur_idx >= 0; --cur_idx) {
         int cur_int = int_data[cur_idx];
-        output += char('0' + cur_int);
+        std::string cur_int_str = std::to_string(cur_int);
+        if (cur_idx == length - 1) {
+            output += cur_int_str;
+        } else {
+            std::string zeros(BASE_LENGTH - cur_int_str.length(), '0');
+            output += (zeros + cur_int_str);
+        }
     }
     std::cout << output;
 }
@@ -131,12 +147,12 @@ int2048& int2048::add(const int2048& another) {
             if (cur_idx < int2_len) {
                 int add_calculated =
                     int_data[cur_idx] + another.int_data[cur_idx] + carry;
-                int_data[cur_idx] = add_calculated % 10;
-                carry = add_calculated / 10;
+                int_data[cur_idx] = add_calculated % BASE;
+                carry = add_calculated / BASE;
             } else {
                 int add_calculated = carry + int_data[cur_idx];
-                carry = add_calculated / 10;
-                int_data[cur_idx] = add_calculated % 10;
+                carry = add_calculated / BASE;
+                int_data[cur_idx] = add_calculated % BASE;
                 if (!carry) {
                     break;
                 }
@@ -179,7 +195,7 @@ int2048& int2048::minus(const int2048& another) {
                     int minus_calculated =
                         int_data[cur_idx] - another.int_data[cur_idx] - borrow;
                     if (minus_calculated < 0) {
-                        int_data[cur_idx] = 10 + minus_calculated;
+                        int_data[cur_idx] = BASE + minus_calculated;
                         borrow = 1;
                     } else {
                         int_data[cur_idx] = minus_calculated;
@@ -188,7 +204,7 @@ int2048& int2048::minus(const int2048& another) {
                 } else {
                     int minus_calculated = int_data[cur_idx] - borrow;
                     if (minus_calculated < 0) {
-                        int_data[cur_idx] = 10 + minus_calculated;
+                        int_data[cur_idx] = BASE + minus_calculated;
                         borrow = 1;
                     } else {
                         int_data[cur_idx] = minus_calculated;
@@ -208,7 +224,7 @@ int2048& int2048::minus(const int2048& another) {
                         another.int_data[cur_idx] - int_data[cur_idx] - borrow;
                     if (minus_calculated < 0) {
                         borrow = 1;
-                        int_data[cur_idx] = minus_calculated + 10;
+                        int_data[cur_idx] = minus_calculated + BASE;
                     } else {
                         borrow = 0;
                         int_data[cur_idx] = minus_calculated;
@@ -216,7 +232,7 @@ int2048& int2048::minus(const int2048& another) {
                 } else {
                     int minus_calculated = another.int_data[cur_idx] - borrow;
                     if (minus_calculated < 0) {
-                        int_data[cur_idx] = 10 + minus_calculated;
+                        int_data[cur_idx] = BASE + minus_calculated;
                         borrow = 1;
                     } else {
                         int_data[cur_idx] = minus_calculated;
@@ -295,8 +311,8 @@ int2048& int2048::operator*=(const int2048& another) {
             int calculated;
             if (cur_idx >= int1_len) {
                 calculated = carry + result.int_data[cur_result_idx];
-                carry = calculated / 10;
-                result.int_data[cur_result_idx] = calculated % 10;
+                carry = calculated / BASE;
+                result.int_data[cur_result_idx] = calculated % BASE;
                 if (!carry) {
                     break;
                 }
@@ -304,8 +320,8 @@ int2048& int2048::operator*=(const int2048& another) {
             }
             calculated = int_data[cur_idx] * another.int_data[ano_cur_idx] +
                          carry + result.int_data[cur_result_idx];
-            carry = calculated / 10;
-            result.int_data[cur_result_idx] = calculated % 10;
+            carry = calculated / BASE;
+            result.int_data[cur_result_idx] = calculated % BASE;
         }
     }
     result.int_reduction();
@@ -331,7 +347,7 @@ int find_quotient(std::vector<int>& dividend, const std::vector<int>& divisor,
 
     std::vector<int> tmp;
     tmp.resize(l1, 0);
-    int search_l, search_r;
+    long long search_l, search_r;
     int ans = 0;
 
     if (l1 == l2) {
@@ -345,18 +361,13 @@ int find_quotient(std::vector<int>& dividend, const std::vector<int>& divisor,
             int carry = 0;
             for (int cur_idx = 0; cur_idx < l1; ++cur_idx) {
                 int calculated = carry + divisor[cur_idx] * mid;
-                carry = calculated / 10;
-                if (calculated % 10 > dividend[cur_idx + start]) {
+                carry = calculated / BASE;
+                if (calculated % BASE > dividend[cur_idx + start]) {
                     curr_is_bigger = 1;
-                } else if (calculated % 10 < dividend[cur_idx + start]) {
+                } else if (calculated % BASE < dividend[cur_idx + start]) {
                     curr_is_bigger = 0;
                 }
                 if (cur_idx == l1 - 1) {
-                    // std::cerr
-                    //     << "mid: " << mid << " calculate%10 " << calculated %
-                    //     10
-                    //     << " dividend: " << dividend[cur_idx + start] << " "
-                    //     << curr_is_bigger << '\n';
                     if (curr_is_bigger || carry) {
                         valid = 0;
                         break;
@@ -371,20 +382,20 @@ int find_quotient(std::vector<int>& dividend, const std::vector<int>& divisor,
             }
         }
     } else {
-        search_l =
-            (10 * dividend[dividend_size - 1] + dividend[dividend_size - 2]) /
-            (divisor[l2 - 1] + 1);
-        search_r = (10 * dividend[dividend_size - 1] +
+        search_l = ((long long)BASE * dividend[dividend_size - 1] +
+                    dividend[dividend_size - 2]) /
+                   (divisor[l2 - 1] + 1);
+        search_r = ((long long)BASE * dividend[dividend_size - 1] +
                     dividend[dividend_size - 2] + 1) /
                    divisor[l2 - 1];
         while (search_l <= search_r) {
             // std::cerr << "l: " << search_l << " r: " << search_r << "\n";
-            int mid = search_l + (search_r - search_l) / 2;
+            long long mid = search_l + (search_r - search_l) / 2;
             bool valid = 1;
             bool curr_is_bigger = 0;
             int carry = 0;
             for (int cur_idx = 0; cur_idx < l1; ++cur_idx) {
-                int calculated;
+                long long calculated;
                 if (cur_idx == l1 - 1) {
                     if (curr_is_bigger && carry == dividend[cur_idx + start] ||
                         carry > dividend[cur_idx + start]) {
@@ -395,10 +406,10 @@ int find_quotient(std::vector<int>& dividend, const std::vector<int>& divisor,
                     break;
                 }
                 calculated = carry + divisor[cur_idx] * mid;
-                carry = calculated / 10;
-                if (calculated % 10 > dividend[cur_idx + start]) {
+                carry = calculated / BASE;
+                if (calculated % BASE > dividend[cur_idx + start]) {
                     curr_is_bigger = 1;
-                } else if (calculated % 10 < dividend[cur_idx + start]) {
+                } else if (calculated % BASE < dividend[cur_idx + start]) {
                     curr_is_bigger = 0;
                 }
             }
@@ -421,14 +432,14 @@ int find_quotient(std::vector<int>& dividend, const std::vector<int>& divisor,
 
         int carry = 0;
         for (int cur_idx = 0; cur_idx < l1; ++cur_idx) {
-            int calculated;
+            long long calculated;
             if (cur_idx >= l2) {
                 calculated = carry;
             } else {
-                calculated = carry + divisor[cur_idx] * ans;
+                calculated = carry + (long long)divisor[cur_idx] * ans;
             }
-            carry = calculated / 10;
-            tmp[cur_idx] = calculated % 10;
+            carry = calculated / BASE;
+            tmp[cur_idx] = calculated % BASE;
         }
 
         // for (int i = tmp.size() - 1; i >= 0; --i) {
@@ -445,7 +456,7 @@ int find_quotient(std::vector<int>& dividend, const std::vector<int>& divisor,
                 dividend[start + cur_idx] = calculated;
             } else {
                 borrow = 1;
-                dividend[start + cur_idx] = calculated + 10;
+                dividend[start + cur_idx] = calculated + BASE;
             }
         }
 
@@ -552,7 +563,14 @@ std::ostream& operator<<(std::ostream& out, const int2048& an_int) {
         out << '-';
     }
     for (int cur_idx = length - 1; cur_idx >= 0; --cur_idx) {
-        out << char('0' + an_int.int_data[cur_idx]);
+        int cur_int = an_int.int_data[cur_idx];
+        std::string cur_int_str = std::to_string(cur_int);
+        if (cur_idx == length - 1) {
+            out << cur_int_str;
+        } else {
+            std::string zeros(BASE_LENGTH - cur_int_str.length(), '0');
+            out << (zeros + cur_int_str);
+        }
     }
     return out;
 }
