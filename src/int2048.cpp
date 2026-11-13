@@ -1,6 +1,4 @@
 #include "int2048.h"
-#include <utility>
-#include <vector>
 namespace sjtu {
 
 const int BASE = 10000;
