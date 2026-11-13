@@ -1,4 +1,6 @@
 #include "int2048.h"
+#include <utility>
+#include <vector>
 namespace sjtu {
 
 const int BASE = 10000;
@@ -288,6 +290,141 @@ int2048 operator-(int2048 int1, const int2048& int2) {
     return std::move(minus(int1, int2));
 }
 
+void karatsuba_mul(const std::vector<int>& int1_data, int int1_start,
+                   int int1_len, const std::vector<int>& int2_data,
+                   int int2_start, int int2_len, std::vector<int>& result) {
+    if ((int1_len <= 0) || (int2_len <= 0) ||
+        int1_start + int1_len > int1_data.size() ||
+        int2_start + int2_len > int2_data.size()) {
+        std::memset(result.data(), 0, result.size() * sizeof(int));
+        return;
+    }
+    if (int1_len + int2_len <= 64) {
+        long max_possible_len = int2_len + int1_len;
+        for (int ano_cur_idx = 0; ano_cur_idx < int2_len; ++ano_cur_idx) {
+            int carry = 0;
+            for (int cur_idx = 0; cur_idx < max_possible_len - ano_cur_idx;
+                 ++cur_idx) {
+                long cur_result_idx = cur_idx + ano_cur_idx;
+                int calculated;
+                if (cur_idx >= int1_len) {
+                    calculated = carry + result[cur_result_idx];
+                    carry = calculated / BASE;
+                    result[cur_result_idx] = calculated % BASE;
+                    if (!carry) {
+                        break;
+                    }
+                    continue;
+                }
+                calculated = int1_data[int1_start + cur_idx] *
+                                 int2_data[int2_start + ano_cur_idx] +
+                             carry + result[cur_result_idx];
+                carry = calculated / BASE;
+                result[cur_result_idx] = calculated % BASE;
+            }
+            return;
+        }
+    }
+    int n = std::max(int1_len, int2_len);
+    int m = n / 2 + 1;
+    std::vector<int> z0;
+    z0.resize(2 * m, 0);
+    karatsuba_mul(int1_data, int1_start, std::min(m, int1_len), int2_data,
+                  int2_start, std::min(m, int2_len), z0);
+    std::vector<int> z2;
+    z2.resize((n - m) * 2, 0);
+    karatsuba_mul(int1_data, m, std::max(0, std::min(n - m, int1_len - m)),
+                  int2_data, m, std::max(0, std::min(n - m, int1_len - m)), z2);
+
+    int plus_size = std::max(n - m, m) + 1;
+    std::vector<int> x1_plus_x0;
+    x1_plus_x0.resize(plus_size, 0);
+    std::vector<int> y1_plus_y0;
+    y1_plus_y0.resize(plus_size, 0);
+
+    int carry = 0;
+    for (int cur_idx = 0; cur_idx < plus_size; ++cur_idx) {
+        int calculated = carry;
+        if (cur_idx < m) {
+            calculated += int1_data[int1_start + cur_idx];
+        }
+        if (cur_idx + m < n) {
+            calculated += int1_data[int1_start + m + cur_idx];
+        }
+        carry = calculated / BASE;
+        x1_plus_x0[cur_idx] = calculated % BASE;
+    }
+
+    carry = 0;
+    for (int cur_idx = 0; cur_idx < plus_size; ++cur_idx) {
+        int calculated = carry;
+        if (cur_idx < m) {
+            calculated += int2_data[int2_start + cur_idx];
+        }
+        if (cur_idx + m < n) {
+            calculated += int2_data[int2_start + cur_idx];
+        }
+        carry = calculated / BASE;
+        y1_plus_y0[cur_idx] = calculated % BASE;
+    }
+
+    std::vector<int> z1;
+    z1.resize(2 * plus_size, 0);
+    karatsuba_mul(x1_plus_x0, 0, plus_size, y1_plus_y0, 0, plus_size, z1);
+
+    int z0_len = z0.size();
+    int z2_len = z2.size();
+    int z1_len = z1.size();
+
+    int borrow = 0;
+    for (int cur_idx = 0; cur_idx < z1_len; ++cur_idx) {
+        int calculated = z1[cur_idx] - borrow;
+        if (cur_idx < z0_len) {
+            calculated -= z0[cur_idx];
+        }
+        if (cur_idx < z2_len) {
+            calculated -= z2[cur_idx];
+        }
+        if (calculated < 0) {
+            borrow = (calculated % BASE == 0) ? (calculated / BASE)
+                                              : (calculated / BASE + 1);
+        } else {
+            borrow = 0;
+        }
+        z1[cur_idx] = calculated + borrow * BASE;
+    }
+
+    int result_len = result.size();
+    for (int cur_idx = 0; cur_idx < z0_len; ++cur_idx) {
+        result[cur_idx] = z0[cur_idx];
+    }
+
+    carry = 0;
+    for (int cur_idx = m; cur_idx < result_len; ++cur_idx) {
+        int calculated = carry + result[cur_idx];
+        if (cur_idx < m + z1_len) {
+            calculated += z1[cur_idx - m];
+        }
+        carry = calculated / BASE;
+        result[cur_idx] = calculated % BASE;
+        if (!carry && cur_idx >= m + z1_len) {
+            break;
+        }
+    }
+    carry = 0;
+    for (int cur_idx = 2 * m; cur_idx < result_len; ++cur_idx) {
+        int calculated = carry + result[cur_idx];
+        if (cur_idx < 2 * m + z2_len) {
+            calculated += z2[cur_idx - m * 2];
+        }
+        carry = calculated / BASE;
+        result[cur_idx] = calculated % BASE;
+        if (!carry && cur_idx >= 2 * m + z2_len) {
+            break;
+        }
+    }
+}
+
 int2048& int2048::operator*=(const int2048& another) {
     int int1_len = int_data.size();
     int int2_len = another.int_data.size();
@@ -297,32 +434,11 @@ int2048& int2048::operator*=(const int2048& another) {
         return *this;
     }
     is_negative = (is_negative ^ (another.is_negative));
-    long max_possible_len = int2_len + int1_len;
-    int2048 result;
-    result.int_data.resize(max_possible_len, 0);
-    for (int ano_cur_idx = 0; ano_cur_idx < int2_len; ++ano_cur_idx) {
-        int carry = 0;
-        for (int cur_idx = 0; cur_idx < max_possible_len - ano_cur_idx;
-             ++cur_idx) {
-            long cur_result_idx = cur_idx + ano_cur_idx;
-            int calculated;
-            if (cur_idx >= int1_len) {
-                calculated = carry + result.int_data[cur_result_idx];
-                carry = calculated / BASE;
-                result.int_data[cur_result_idx] = calculated % BASE;
-                if (!carry) {
-                    break;
-                }
-                continue;
-            }
-            calculated = int_data[cur_idx] * another.int_data[ano_cur_idx] +
-                         carry + result.int_data[cur_result_idx];
-            carry = calculated / BASE;
-            result.int_data[cur_result_idx] = calculated % BASE;
-        }
-    }
-    result.int_reduction();
-    int_data = std::move(result.int_data);
+    int bigger_len = std::max(int1_len, int2_len);
+    std::vector<int> result;
+    result.resize(2 * bigger_len, 0);
+    karatsuba_mul(int_data, 0, int1_len, another.int_data, 0, int2_len, result);
+    int_reduction();
     return *this;
 }
 
