@@ -63,11 +63,6 @@ void int2048::int_reduction() {
 
 int2048::int2048(const int2048& another) {
     is_negative = another.is_negative;
-    // int length = another.int_data.size();
-    // int_data.reserve(length);
-    // for (int cur_idx = 0; cur_idx < length; ++cur_idx) {
-    //     int_data[cur_idx] = (another.int_data)[cur_idx];
-    // }
     int_data = another.int_data;
     int_reduction();
 }
