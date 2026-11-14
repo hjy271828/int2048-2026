@@ -474,7 +474,7 @@ int find_quotient(std::vector<int>& dividend, const std::vector<int>& divisor,
             bool curr_is_bigger = 0;
             int carry = 0;
             for (int cur_idx = 0; cur_idx < l1; ++cur_idx) {
-                int calculated = carry + divisor[cur_idx] * mid;
+                long long calculated = carry + divisor[cur_idx] * mid;
                 carry = calculated / BASE;
                 if (calculated % BASE > dividend[cur_idx + start]) {
                     curr_is_bigger = 1;
@@ -502,6 +502,7 @@ int find_quotient(std::vector<int>& dividend, const std::vector<int>& divisor,
         search_r = ((long long)BASE * dividend[dividend_size - 1] +
                     dividend[dividend_size - 2] + 1) /
                    divisor[l2 - 1];
+        search_r = std::min(search_r, (long long)BASE - 1);
         while (search_l <= search_r) {
             // std::cerr << "l: " << search_l << " r: " << search_r << "\n";
             long long mid = search_l + (search_r - search_l) / 2;
@@ -544,6 +545,9 @@ int find_quotient(std::vector<int>& dividend, const std::vector<int>& divisor,
         // }
         // std::cerr << '\n';
 
+        if (ans >= BASE) {
+            ans = BASE - 1;
+        }
         int carry = 0;
         for (int cur_idx = 0; cur_idx < l1; ++cur_idx) {
             long long calculated;
